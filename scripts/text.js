@@ -16,6 +16,20 @@ Game.text.modeLine = function (id) {
   return text.get(id)
 }
 
+Game.text.ui = function (id) {
+  let text = new Map()
+
+  text.set('hp', 'HP: ')
+  text.set('energy', 'EN: ')
+  text.set('turn', 'TN: ')
+  text.set('heal', 'Heal')
+  text.set('fire', 'Fire')
+  text.set('ice', 'Ice')
+  text.set('gift', 'Gift')
+
+  return text.get(id)
+}
+
 Game.text.error = function (id) {
   let text = new Map()
 

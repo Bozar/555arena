@@ -60,8 +60,14 @@ Game.input.keybind.set('attack', new Map())
 Game.input.keybind.get('attack').set('quick', ['f'])
 Game.input.keybind.get('attack').set('power', ['d'])
 Game.input.keybind.get('attack').set('special', ['s'])
-Game.input.keybind.get('attack').set('gifted', ['g'])
 Game.input.keybind.get('attack').set('switch', ['a'])
+
+// gifted actions
+Game.input.keybind.set('gift', new Map())
+Game.input.keybind.get('gift').set('prefix', ['g'])
+Game.input.keybind.get('gift').set('potion', ['f'])
+Game.input.keybind.get('gift').set('weapon', ['d'])
+Game.input.keybind.get('gift').set('ring', ['s'])
 
 // maneuver actions
 Game.input.keybind.set('maneuver', new Map())
@@ -169,6 +175,31 @@ Game.UI.dungeon._height = Game.UI.canvas.getHeight() - Game.UI.padTopBottom -
 Game.UI.dungeon._x = Game.UI.padLeftRight
 Game.UI.dungeon._y = Game.UI.padTopBottom
 
+// ``` UI blocks +++
+Game.UI.hpEnergy = new Game.UI(Game.UI.status.getWidth(), 2)
+Game.UI.hpEnergy._x = Game.UI.status.getX()
+Game.UI.hpEnergy._y = Game.UI.status.getY() + 2
+
+Game.UI.potion = new Game.UI(Game.UI.status.getWidth(), 3)
+Game.UI.potion._x = Game.UI.status.getX()
+Game.UI.potion._y = Game.UI.hpEnergy.getY() + Game.UI.hpEnergy.getHeight() + 1
+
+Game.UI.gift = new Game.UI(Game.UI.status.getWidth(), 1)
+Game.UI.gift._x = Game.UI.status.getX()
+Game.UI.gift._y = Game.UI.potion.getY() + Game.UI.potion.getHeight() + 1
+
+Game.UI.turn = new Game.UI(Game.UI.status.getWidth(), 1)
+Game.UI.turn._x = Game.UI.status.getX()
+Game.UI.turn._y = Game.UI.gift.getY() + Game.UI.gift.getHeight() + 1
+
+Game.UI.buff = new Game.UI(Game.UI.status.getWidth(), 5)
+Game.UI.buff._x = Game.UI.status.getX()
+Game.UI.buff._y = Game.UI.turn.getY() + Game.UI.turn.getHeight() + 1
+
+Game.UI.debuff = new Game.UI(Game.UI.status.getWidth(), 5)
+Game.UI.debuff._x = Game.UI.status.getX()
+Game.UI.debuff._y = Game.UI.buff.getY() + Game.UI.buff.getHeight()
+
 // ----- Screen factory: display content, listen keyboard events +++++
 Game.Screen = function (name, mode) {
   this._name = name || 'Unnamed Screen'
@@ -251,6 +282,117 @@ Game.screens.drawBorder = function () {
   }
 }
 
+Game.screens.drawVersion = function () {
+  let version = Game.getVersion()
+
+  Game.getDevelop() && (version = 'Wiz|' + version)
+  Game.screens.drawAlignRight(Game.UI.status.getX(), Game.UI.status.getY(),
+    Game.UI.status.getWidth(), version, 'grey')
+}
+
+Game.screens.drawHPenergy = function () {
+  let hp = 14
+  let maxHP = 20
+  let energy = 1
+  let maxEnergy = 5
+  let color = hp / maxHP > 0.7
+    ? 'white'
+    : hp / maxHP > 0.3
+      ? 'orange'
+      : 'red'
+  let x = Game.UI.hpEnergy.getX()
+  let y = Game.UI.hpEnergy.getY()
+
+  Game.display.drawText(x, y,
+    Game.text.ui('hp') + Game.screens.colorfulText(hp + '/' + maxHP, color))
+  Game.display.drawText(x, y + 1,
+    Game.text.ui('energy') + energy + '/' + maxEnergy)
+}
+
+Game.screens.drawPotion = function () {
+  let healCD = 0
+  let fireCD = 3
+  let iceCD = 0
+
+  let healColor = potionColor(healCD)
+  let fireColor = potionColor(fireCD)
+  let iceColor = potionColor(iceCD)
+
+  let x = Game.UI.potion.getX()
+  let y = Game.UI.potion.getY()
+  let width = Game.UI.potion.getWidth()
+
+  Game.display.drawText(x, y,
+    Game.screens.colorfulText(Game.text.ui('heal'), healColor))
+  Game.display.drawText(x, y + 1,
+    Game.screens.colorfulText(Game.text.ui('fire'), fireColor))
+  Game.display.drawText(x, y + 2,
+    Game.screens.colorfulText(Game.text.ui('ice'), iceColor))
+
+  healCD > 0 &&
+    Game.screens.drawAlignRight(x, y, width, healCD.toString(10))
+  fireCD > 0 &&
+    Game.screens.drawAlignRight(x, y + 1, width, fireCD.toString(10))
+  iceCD > 0 &&
+    Game.screens.drawAlignRight(x, y + 2, width, iceCD.toString(10))
+
+  function potionColor (cd) {
+    return cd > 0 ? 'grey' : 'white'
+  }
+}
+
+Game.screens.drawGift = function () {
+  let hasGift = false
+  let color = hasGift ? 'white' : 'grey'
+
+  Game.display.drawText(Game.UI.gift.getX(), Game.UI.gift.getY(),
+    Game.screens.colorfulText(Game.text.ui('gift'), color))
+}
+
+Game.screens.drawTurn = function () {
+  Game.display.drawText(Game.UI.turn.getX(), Game.UI.turn.getY(),
+    Game.text.ui('turn') + '2/25')
+}
+
+Game.screens.drawEffect = function () {
+  let buff = new Map([['fire', 3], ['ice', 2]])
+  let debuff = new Map([['burn', 3]])
+
+  let buffKey = Array.from(buff.keys())
+  let debuffKey = Array.from(debuff.keys())
+
+  let x = Game.UI.buff.getX()
+  let buffY = Game.UI.buff.getY()
+  let debuffY = Game.UI.debuff.getY()
+  let width = Game.UI.status.getWidth()
+
+  for (let i = 0; i < buffKey.length; i++) {
+    Game.display.drawText(x, buffY + i,
+      Game.screens.colorfulText(buffKey[i], 'green'))
+    Game.screens.drawAlignRight(x, buffY + i, width,
+      buff.get(buffKey[i]).toString(10))
+  }
+
+  for (let i = 0; i < debuffKey.length; i++) {
+    Game.display.drawText(x, debuffY + i,
+      Game.screens.colorfulText(debuffKey[i], 'red'))
+    Game.screens.drawAlignRight(x, debuffY + i, width,
+      debuff.get(debuffKey[i]).toString(10))
+  }
+}
+
+Game.screens.drawSeed = function () {
+  let seed = '1234567890'
+  seed = seed.replace(/^(#{0,1}\d{5})(\d{5})$/, '$1-$2')
+
+  Game.screens.drawAlignRight(
+    Game.UI.status.getX(),
+    Game.UI.status.getY() + Game.UI.status.getHeight() - 1,
+    Game.UI.status.getWidth(),
+    seed,
+    'grey')
+}
+
 // ``` In-game screens +++
 Game.screens.main = new Game.Screen('main')
 
@@ -267,15 +409,16 @@ Game.screens.main.keyInput = function (e) {
 }
 
 Game.screens.main.display = function () {
+  // status panel
   Game.screens.drawBorder()
+  Game.screens.drawVersion()
+  Game.screens.drawHPenergy()
+  Game.screens.drawPotion()
+  Game.screens.drawGift()
+  Game.screens.drawTurn()
+  Game.screens.drawEffect()
+  Game.screens.drawSeed()
 
-  Game.display.draw(Game.UI.status.getX(), Game.UI.status.getY(), '#')
-  Game.display.draw(Game.UI.status.getX() + Game.UI.status.getWidth() - 1,
-    Game.UI.status.getY(), '#')
-  Game.display.draw(Game.UI.status.getX(),
-    Game.UI.status.getY() + Game.UI.status.getHeight() - 1, '#')
-  Game.display.draw(Game.UI.status.getX() + Game.UI.status.getWidth() - 1,
-    Game.UI.status.getY() + Game.UI.status.getHeight() - 1, '#')
   Game.display.drawText(Game.UI.modeline.getX(), Game.UI.modeline.getY(),
     '1111111111111111111111111111111111111111111111111112')
   Game.display.draw(Game.UI.modeline.getX() + Game.UI.modeline.getWidth(),
