@@ -169,16 +169,105 @@ Game.UI.dungeon._height = Game.UI.canvas.getHeight() - Game.UI.padTopBottom -
 Game.UI.dungeon._x = Game.UI.padLeftRight
 Game.UI.dungeon._y = Game.UI.padTopBottom
 
-// ----- Initialization +++++
-window.onload = function () {
-  if (!ROT.isSupported()) {
-    window.alert(Game.text.devError('browser'))
-    return
-  }
-  document.getElementById('game').appendChild(Game.display.getContainer())
-  // Game.screens.classSeed.enter()
+// ----- Screen factory: display content, listen keyboard events +++++
+Game.Screen = function (name, mode) {
+  this._name = name || 'Unnamed Screen'
+  this._mode = mode || 'main'
+  this._modeLineText = ''
+}
 
-  // Game.keyboard.listenEvent('add', 'classSeed')
+Game.Screen.prototype.getName = function () { return this._name }
+Game.Screen.prototype.getMode = function () { return this._mode }
+Game.Screen.prototype.getText = function () { return this._modeLineText }
+
+Game.Screen.prototype.setMode = function (mode, text) {
+  this._mode = mode || 'main'
+  this._modeLineText = Game.text.modeLine(this._mode) + ' ' + (text || '')
+
+  return true
+}
+
+Game.Screen.prototype.enter = function () {
+  Game.screens._currentName = this.getName()
+  Game.screens._currentMode = this.getMode()
+
+  this.initialize(this.getName())
+  this.display()
+}
+
+Game.Screen.prototype.exit = function () {
+  Game.screens._currentName = null
+  Game.screens._currentMode = null
+
+  Game.display.clear()
+}
+
+Game.Screen.prototype.initialize = function (name) {
+  Game.getDevelop() && console.log('Enter screen: ' + name + '.')
+}
+
+Game.Screen.prototype.display = function () {
+  Game.display.drawText(1, 1, 'Testing screen')
+  Game.display.drawText(1, 2, 'Name: ' + Game.screens._currentName)
+  Game.display.drawText(1, 3, 'Mode: ' + Game.screens._currentMode)
+}
+
+Game.Screen.prototype.keyInput = function (e) {
+  Game.getDevelop() && console.log('Key pressed: ' + e.key)
+}
+
+// ----- In-game screens & helper functions +++++
+Game.screens = {}
+Game.screens._currentName = null
+Game.screens._currentMode = null
+
+// ``` Helper functions +++
+Game.screens.colorfulText = function (text, fgColor, bgColor) {
+  return bgColor
+    ? '%c{' + Game.getColor(fgColor) + '}%b{' +
+    Game.getColor(bgColor) + '}' + text + '%b{}%c{}'
+    : '%c{' + Game.getColor(fgColor) + '}' + text + '%c{}'
+}
+
+Game.screens.capitalizeFirst = function (text) {
+  text = text.toString()
+  return text[0].toUpperCase() + text.slice(1)
+}
+
+Game.screens.drawAlignRight = function (x, y, width, text, color) {
+  Game.display.drawText(x + width - text.length, y,
+    color ? Game.screens.colorfulText(text, color) : text)
+}
+
+Game.screens.drawBorder = function () {
+  let status = Game.UI.status
+  let dungeon = Game.UI.dungeon
+
+  for (let i = status.getY(); i < status.getHeight(); i++) {
+    Game.display.draw(status.getX() - 1, i, '|')
+  }
+  for (let i = dungeon.getX(); i < dungeon.getWidth() + 1; i++) {
+    Game.display.draw(i, dungeon.getY() + dungeon.getHeight() - 0.3, '-')
+  }
+}
+
+// ``` In-game screens +++
+Game.screens.main = new Game.Screen('main')
+
+Game.screens.main.initialize = function () {
+  Game.input.listenEvent('add', 'main')
+}
+
+Game.screens.main.keyInput = function (e) {
+  if (Game.input.getAction(e, 'move')) {
+    console.log(Game.input.getAction(e, 'move'))
+  } else {
+    console.log(e.key)
+  }
+}
+
+Game.screens.main.display = function () {
+  Game.screens.drawBorder()
 
   Game.display.draw(Game.UI.status.getX(), Game.UI.status.getY(), '#')
   Game.display.draw(Game.UI.status.getX() + Game.UI.status.getWidth() - 1,
@@ -187,11 +276,8 @@ window.onload = function () {
     Game.UI.status.getY() + Game.UI.status.getHeight() - 1, '#')
   Game.display.draw(Game.UI.status.getX() + Game.UI.status.getWidth() - 1,
     Game.UI.status.getY() + Game.UI.status.getHeight() - 1, '#')
-  // Game.display.draw(Game.UI.modeline.getX(), Game.UI.modeline.getY(), 'm')
   Game.display.drawText(Game.UI.modeline.getX(), Game.UI.modeline.getY(),
     '1111111111111111111111111111111111111111111111111112')
-  // Game.display.draw(Game.UI.modeline.getX() + Game.UI.modeline.getWidth() - 1,
-  // Game.UI.modeline.getY(), 'm')
   Game.display.draw(Game.UI.modeline.getX() + Game.UI.modeline.getWidth(),
     Game.UI.modeline.getY(), '|')
 
@@ -209,7 +295,18 @@ window.onload = function () {
     Game.UI.dungeon.getY(), 'D')
   Game.display.draw(Game.UI.dungeon.getX(),
     Game.UI.dungeon.getY() + Game.UI.dungeon.getHeight() - 1, 'D')
-  Game.display.drawText(Game.UI.dungeon.getX(),
-    Game.UI.dungeon.getY() + Game.UI.dungeon.getHeight() - 0.3,
-    '----------------------------------------------------')
+}
+
+// ----- Initialization +++++
+window.onload = function () {
+  if (!ROT.isSupported()) {
+    window.alert(Game.text.error('browser'))
+    return
+  }
+  document.getElementById('game').appendChild(Game.display.getContainer())
+
+  // Game.input.listenEvent('add', 'classSeed')
+
+  Game.display.clear()
+  Game.screens.main.enter()
 }
