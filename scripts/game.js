@@ -28,6 +28,84 @@ Game._color.set('red', '#FF4C4C')
 
 Game.getColor = function (color) { return Game._color.get(color) }
 
+// ----- Key-bindings +++++
+Game.input = {}
+Game.input.keybind = new Map()
+// [mode1: [keybind1], mode2: [keybind2], ...]
+// keybind1 -> [action1: [key1_1, key1_2, ...],
+//              action2: [key2_1, key2_2, ...], ...]
+
+// keys that cannot be remapped by player
+Game.input.keybind.set('fixed', new Map())
+Game.input.keybind.get('fixed').set('space', [' '])
+Game.input.keybind.get('fixed').set('enter', ['Enter'])
+Game.input.keybind.get('fixed').set('esc', ['Escape'])
+
+// movement
+Game.input.keybind.set('move', new Map())
+Game.input.keybind.get('move').set('left', ['h', 'ArrowLeft'])
+Game.input.keybind.get('move').set('down', ['j', 'ArrowDown'])
+Game.input.keybind.get('move').set('up', ['k', 'ArrowUp'])
+Game.input.keybind.get('move').set('right', ['l', 'ArrowRight'])
+Game.input.keybind.get('move').set('wait', ['.'])
+
+Game.input.keybind.set('fastMove', new Map())
+Game.input.keybind.get('fastMove').set('left', ['H', 'ArrowLeft'])
+Game.input.keybind.get('fastMove').set('down', ['J', 'ArrowDown'])
+Game.input.keybind.get('fastMove').set('up', ['K', 'ArrowUp'])
+Game.input.keybind.get('fastMove').set('right', ['L', 'ArrowRight'])
+
+// attack actions
+Game.input.keybind.set('attack', new Map())
+Game.input.keybind.get('attack').set('quick', ['f'])
+Game.input.keybind.get('attack').set('power', ['d'])
+Game.input.keybind.get('attack').set('special', ['s'])
+Game.input.keybind.get('attack').set('gifted', ['g'])
+Game.input.keybind.get('attack').set('switch', ['a'])
+
+// maneuver actions
+Game.input.keybind.set('maneuver', new Map())
+Game.input.keybind.get('maneuver').set('drink', ['q'])
+Game.input.keybind.get('maneuver').set('fire', ['w'])
+Game.input.keybind.get('maneuver').set('ice', ['e'])
+Game.input.keybind.get('maneuver').set('heal', ['r'])
+
+// actions that do not take in-game time
+Game.input.keybind.set('pause', new Map())
+Game.input.keybind.get('pause').set('explore', ['x'])
+Game.input.keybind.get('pause').set('develop', ['~'])
+Game.input.keybind.get('pause').set('nextTarget', ['PageDown', 'o'])
+Game.input.keybind.get('pause').set('previousTarget', ['PageUp', 'i'])
+
+Game.input.getAction = function (keyInput, mode) {
+  if (!mode) {
+    Game.getDevelop() && console.log('Undefined mode.')
+    return null
+  }
+
+  for (const [key, value] of Game.input.keybind.get(mode)) {
+    if (value.indexOf(keyInput.key) > -1) {
+      return key
+    }
+  }
+  return null
+}
+
+Game.input.listenEvent = function (event, handler) {
+  handler = Game.screens[String(handler)]
+    ? Game.screens[handler].keyInput
+    : handler
+
+  switch (event) {
+    case 'add':
+      window.addEventListener('keydown', handler)
+      break
+    case 'remove':
+      window.removeEventListener('keydown', handler)
+      break
+  }
+}
+
 // ----- The position & size of screen elements +++++
 Game.UI = function (width, height) {
   this._width = width || null
