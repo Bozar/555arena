@@ -422,11 +422,86 @@ Game.screens.drawMessage = function (newMsg) {
   }
 }
 
+Game.screens.drawDungeon = function () {
+  let ePC = Game.entities.get('pc')
+  let ePCpos = ePC.Position
+  // let eNPC = Game.entities.get('npc')
+  let eDungeon = Game.entities.get('dungeon')
+  let uiDungeon = Game.UI.dungeon
+
+  let left = uiDungeon.getX()
+  let right = uiDungeon.getX() + uiDungeon.getWidth() - 1
+  let deltaX = eDungeon.Dungeon.getDeltaX()
+
+  let top = uiDungeon.getY()
+  let bottom = uiDungeon.getY() + uiDungeon.getHeight() - 1
+  let deltaY = eDungeon.Dungeon.getDeltaY()
+
+  let memory = eDungeon.Dungeon.getMemory()
+
+  memory.length > 0 && drawMemory()
+
+  eDungeon.fov.compute(ePCpos.getX(), ePCpos.getY(), ePCpos.getSight(),
+    function (x, y) {
+      memory.indexOf(x + ',' + y) < 0 && memory.push(x + ',' + y)
+
+      drawTerrain(x, y)
+    })
+
+  drawActor(ePC)
+  // for (const keyValue of eNPC) {
+  //   if (Game.system.targetInSight(ePC, ePCpos.getSight(), keyValue[1])) {
+  //     drawActor(keyValue[1])
+  //   }
+  // }
+  // drawActor(Game.entities.get('marker'))
+
+  function drawMemory () {
+    for (let i = 0; i < memory.length; i++) {
+      let x = memory[i].split(',')[0]
+      let y = memory[i].split(',')[1]
+
+      drawTerrain(x, y, 'grey')
+    }
+  }
+
+  function drawTerrain (x, y, color) {
+    insideScreen(x, y) &&
+      Game.display.draw(screenX(x), screenY(y),
+        eDungeon.Dungeon.getTerrain().get(x + ',' + y) === 0 ? '.' : '#',
+        Game.getColor(color || null))
+  }
+
+  function drawActor (actor) {
+    let x = actor.Position.getX()
+    let y = actor.Position.getY()
+
+    x !== null && y !== null && insideScreen(x, y) &&
+      Game.display.draw(screenX(x), screenY(y),
+        actor.Display.getCharacter(), actor.Display.getColor())
+  }
+
+  function insideScreen (x, y) {
+    return x - deltaX + left === screenX(x) &&
+      y - deltaY + top === screenY(y)
+  }
+
+  function screenX (x) {
+    return Math.min(Math.max(left, x - deltaX + left), right)
+  }
+  function screenY (y) {
+    return Math.min(Math.max(top, y - deltaY + top), bottom)
+  }
+}
+
 // ``` In-game screens +++
 Game.screens.main = new Game.Screen('main')
 
 Game.screens.main.initialize = function () {
   Game.entity.message()
+  Game.entity.pc()
+  Game.entity.dungeon()
+  Game.system.placeActor(Game.entities.get('pc'))
 
   Game.input.listenEvent('add', 'main')
 }
@@ -454,16 +529,9 @@ Game.screens.main.display = function () {
   Game.screens.drawEffect()
   Game.screens.drawSeed()
 
+  // dungeon, message & modeline
   Game.screens.drawMessage()
-
-  Game.display.drawText(Game.UI.modeline.getX(), Game.UI.modeline.getY(),
-    '1111111111111111111111111111111111111111111111111112')
-
-  Game.display.draw(Game.UI.dungeon.getX(), Game.UI.dungeon.getY(), 'D')
-  Game.display.draw(Game.UI.dungeon.getX() + Game.UI.dungeon.getWidth() - 1,
-    Game.UI.dungeon.getY(), 'D')
-  Game.display.draw(Game.UI.dungeon.getX(),
-    Game.UI.dungeon.getY() + Game.UI.dungeon.getHeight() - 1, 'D')
+  Game.screens.drawDungeon()
 }
 
 // ----- Initialization +++++
@@ -473,8 +541,6 @@ window.onload = function () {
     return
   }
   document.getElementById('game').appendChild(Game.display.getContainer())
-
-  // Game.input.listenEvent('add', 'classSeed')
 
   Game.display.clear()
   Game.screens.main.enter()
