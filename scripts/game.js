@@ -393,19 +393,54 @@ Game.screens.drawSeed = function () {
     'grey')
 }
 
+Game.screens.drawMessage = function (newMsg) {
+  let width = Game.UI.message.getWidth()
+  let height = Game.UI.message.getHeight()
+  let x = Game.UI.message.getX()
+  let y = Game.UI.message.getY()
+
+  let pattern = '(.{' + (width - 10) + ',' + width + '}\\s)'
+  let onScreen = []
+
+  Game.system.addMessage(newMsg)
+  let msgList = Game.entities.get('message').Message.getMessage()
+
+  for (let i = 0; i < msgList.length; i++) {
+    onScreen.push(...msgList[i].split(new RegExp(pattern)))
+  }
+  // https://stackoverflow.com/questions/22044461/
+  onScreen = onScreen.filter((i) => { return i.length > 0 })
+
+  for (let i = Math.max(0, onScreen.length - height), j = 0;
+    i < onScreen.length; (i++), (j++)) {
+    Game.display.drawText(x,
+      // if there are less lines than the height,
+      // let the last line sit on the bottom
+      y + Math.max(0, height - onScreen.length) + j,
+      onScreen[i]
+    )
+  }
+}
+
 // ``` In-game screens +++
 Game.screens.main = new Game.Screen('main')
 
 Game.screens.main.initialize = function () {
+  Game.entity.message()
+
   Game.input.listenEvent('add', 'main')
 }
 
 Game.screens.main.keyInput = function (e) {
   if (Game.input.getAction(e, 'move')) {
-    console.log(Game.input.getAction(e, 'move'))
+    Game.system.addMessage(Game.input.getAction(e, 'move'))
+    // console.log(Game.input.getAction(e, 'move'))
   } else {
-    console.log(e.key)
+    Game.system.addMessage(e.key)
+    // console.log(e.key)
   }
+  Game.display.clear()
+  Game.screens.main.display()
 }
 
 Game.screens.main.display = function () {
@@ -419,19 +454,10 @@ Game.screens.main.display = function () {
   Game.screens.drawEffect()
   Game.screens.drawSeed()
 
+  Game.screens.drawMessage()
+
   Game.display.drawText(Game.UI.modeline.getX(), Game.UI.modeline.getY(),
     '1111111111111111111111111111111111111111111111111112')
-  Game.display.draw(Game.UI.modeline.getX() + Game.UI.modeline.getWidth(),
-    Game.UI.modeline.getY(), '|')
-
-  Game.display.draw(Game.UI.message.getX(), Game.UI.message.getY(), 'M')
-  Game.display.draw(Game.UI.message.getX() + Game.UI.message.getWidth() - 1,
-    Game.UI.message.getY(), 'M')
-
-  Game.display.draw(Game.UI.message.getX(),
-    Game.UI.message.getY() + Game.UI.message.getHeight() - 1, 'M')
-  Game.display.draw(Game.UI.message.getX() + Game.UI.message.getWidth() - 1,
-    Game.UI.message.getY() + Game.UI.message.getHeight() - 1, 'M')
 
   Game.display.draw(Game.UI.dungeon.getX(), Game.UI.dungeon.getY(), 'D')
   Game.display.draw(Game.UI.dungeon.getX() + Game.UI.dungeon.getWidth() - 1,
