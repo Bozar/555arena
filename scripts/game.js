@@ -539,6 +539,8 @@ Game.screens.main.keyInput = function (e) {
   if (e.shiftKey) {
     if (keyAction(e, 'pause') === 'develop') {
       Game.setDevelop()
+    } else if (keyAction(e, 'fastMove')) {
+      Game.system.fastMove(keyAction(e, 'fastMove'))
     }
   } else if (keyAction(e, 'pause') === 'printSeed') {
     console.log(Game.entities.get('seed').Seed.getSeed())

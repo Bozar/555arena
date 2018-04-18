@@ -147,6 +147,33 @@ Game.system.move = function (direction, actor, lockEngine) {
   }
 }
 
+// refer: Game.system.pcAct
+Game.system.fastMove = function (direction, e) {
+  let who = e || Game.entities.get('pc')
+  let fastMove = who.FastMove
+  // let npc = Game.entities.get('npc')
+
+  fastMove.setFastMove(true)
+  direction && fastMove.setDirection(direction)
+
+  // if (Game.system.isPC(who) &&
+  //   Game.system.targetInSight(who, who.Position.getSight(), npc)) {
+  //   resetFastMove()
+  // } else
+  if (fastMove.getCurrentStep() <= fastMove.getMaxStep()) {
+    fastMove.setCurrentStep(fastMove.getCurrentStep() + 1)
+    !Game.system.move(fastMove.getDirection(), who) && resetFastMove()
+  } else {
+    resetFastMove()
+  }
+
+  function resetFastMove () {
+    fastMove.setFastMove(false)
+    fastMove.setCurrentStep(0)
+    fastMove.setDirection(null)
+  }
+}
+
 Game.system.isWalkable = function (x, y, e) {
   // let pc = Game.entities.get('pc').Position
   let dungeon = Game.entities.get('dungeon')
@@ -173,7 +200,7 @@ Game.system.pcAct = function () {
   Game.entities.get('timer').engine.lock()
 
   // Game.system.updateStatus(pc)
-  // pc.FastMove.getFastMove() && Game.system.fastMove()
+  Game.entities.get('pc').FastMove.getFastMove() && Game.system.fastMove()
 
   Game.input.listenEvent('add', 'main')
 }

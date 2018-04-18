@@ -45,10 +45,9 @@ Game.entity.dungeon = function () {
 Game.entity.pc = function () {
   let e = new Game.Factory('pc')
 
-  // e.addComponent(new Game.Component.ActorName('Nameless One', null))
   e.addComponent(new Game.Component.Position(6))
   e.addComponent(new Game.Component.Move())
-  // e.addComponent(new Game.Component.FastMove())
+  e.addComponent(new Game.Component.FastMove())
   e.addComponent(new Game.Component.Display('@'))
   // e.addComponent(new Game.Component.HitPoint(64))
   // e.addComponent(new Game.Component.Combat(25, 70, 12))
