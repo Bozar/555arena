@@ -3,6 +3,7 @@
 // ----- Store entities +++++
 Game.entities = new Map()
 Game.entities.set('message', null)
+Game.entities.set('seed', null)
 
 // ----- Create a single entity +++++
 Game.entity = {}
@@ -55,4 +56,11 @@ Game.entity.pc = function () {
   // e.act = Game.system.pcAct
 
   Game.entities.set('pc', e)
+}
+
+Game.entity.seed = function () {
+  let e = new Game.Factory('seed')
+  e.addComponent(new Game.Component.Seed())
+
+  Game.entities.set('seed', e)
 }

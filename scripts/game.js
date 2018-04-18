@@ -15,6 +15,7 @@ Game.setDevelop = function () {
 // there are no hyphens ('-') inside numbered seed
 // example:
 // Game._devSeed = '#12345'
+Game.getDevSeed = function () { return this._devSeed }
 
 Game._color = new Map()
 Game._color.set(null, '')
@@ -382,15 +383,14 @@ Game.screens.drawEffect = function () {
 }
 
 Game.screens.drawSeed = function () {
-  let seed = '1234567890'
+  let seed = Game.entities.get('seed').Seed.getRawSeed()
   seed = seed.replace(/^(#{0,1}\d{5})(\d{5})$/, '$1-$2')
 
   Game.screens.drawAlignRight(
     Game.UI.status.getX(),
     Game.UI.status.getY() + Game.UI.status.getHeight() - 1,
     Game.UI.status.getWidth(),
-    seed,
-    'grey')
+    seed, 'grey')
 }
 
 Game.screens.drawMessage = function (newMsg) {
@@ -498,6 +498,10 @@ Game.screens.drawDungeon = function () {
 Game.screens.main = new Game.Screen('main')
 
 Game.screens.main.initialize = function () {
+  Game.entity.seed()
+  Game.entities.get('seed').Seed.setSeed(Game.getDevSeed())
+  ROT.RNG.setSeed(Game.entities.get('seed').Seed.getSeed())
+
   Game.entity.message()
   Game.entity.pc()
   Game.entity.dungeon()
