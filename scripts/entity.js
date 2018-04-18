@@ -2,9 +2,12 @@
 
 // ----- Store entities +++++
 Game.entities = new Map()
+Game.entities.set('dungeon', null)
 Game.entities.set('message', null)
 Game.entities.set('seed', null)
 Game.entities.set('timer', null)
+Game.entities.set('pc', null)
+Game.entities.set('npc', new Map())
 
 // ----- Create a single entity +++++
 Game.entity = {}
@@ -57,6 +60,16 @@ Game.entity.pc = function () {
   e.act = Game.system.pcAct
 
   Game.entities.set('pc', e)
+}
+
+Game.entity.npc = function (trueName) {
+  let e = new Game.Factory(trueName)
+
+  e.addComponent(new Game.Component.Position(6))
+  e.addComponent(new Game.Component.Display('D'))
+
+  Game.entities.get('npc').set(e.getID(), e)
+  return e.getID()
 }
 
 Game.entity.seed = function () {

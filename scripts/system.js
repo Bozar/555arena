@@ -151,23 +151,23 @@ Game.system.move = function (direction, actor, lockEngine) {
 Game.system.fastMove = function (direction, e) {
   let who = e || Game.entities.get('pc')
   let fastMove = who.FastMove
-  // let npc = Game.entities.get('npc')
+  let npc = Game.entities.get('npc')
+  let reset = false
 
   fastMove.setFastMove(true)
   direction && fastMove.setDirection(direction)
 
-  // if (Game.system.isPC(who) &&
-  //   Game.system.targetInSight(who, who.Position.getSight(), npc)) {
-  //   resetFastMove()
-  // } else
-  if (fastMove.getCurrentStep() <= fastMove.getMaxStep()) {
+  if (Game.system.isPC(who) &&
+    Game.system.targetInSight(who, who.Position.getSight(), npc)) {
+    reset = true
+  } else if (fastMove.getCurrentStep() <= fastMove.getMaxStep()) {
     fastMove.setCurrentStep(fastMove.getCurrentStep() + 1)
-    !Game.system.move(fastMove.getDirection(), who) && resetFastMove()
+    reset = !Game.system.move(fastMove.getDirection(), who)
   } else {
-    resetFastMove()
+    reset = true
   }
 
-  function resetFastMove () {
+  if (reset) {
     fastMove.setFastMove(false)
     fastMove.setCurrentStep(0)
     fastMove.setDirection(null)
@@ -187,10 +187,9 @@ Game.system.isWalkable = function (x, y, e) {
 
   //   walkable = inSight.indexOf(x + ',' + y) > -1
   // } else {
-  walkable = dungeon.Dungeon.getTerrain().get(x + ',' + y) === 0
-  // walkable = dungeon.Dungeon.getTerrain().get(x + ',' + y) === 0 &&
-  //     !Game.system.npcHere(x, y) &&
-  //     !Game.system.pcHere(x, y)
+  walkable = dungeon.Dungeon.getTerrain().get(x + ',' + y) === 0 &&
+    !Game.system.npcHere(x, y) &&
+    !Game.system.pcHere(x, y)
   // }
 
   return walkable
@@ -214,4 +213,61 @@ Game.system.unlockEngine = function (duration, actor) {
 
   Game.display.clear()
   Game.screens.main.display()
+}
+
+Game.system.targetInSight = function (observer, sight, target) {
+  let fov = Game.entities.get('dungeon').fov
+  let observerX = observer.Position.getX()
+  let observerY = observer.Position.getY()
+  let targetX = null
+  let targetY = null
+  let targetFound = null
+
+  let targetList = []
+
+  if (Object.getPrototypeOf(target) === Map.prototype) {
+    // target === Game.entities.get('npc')
+    fov.compute(observerX, observerY, sight, function (x, y) {
+      targetFound = Game.system.npcHere(x, y)
+      targetFound && targetList.push(targetFound)
+    })
+  } else {
+    targetX = target.Position.getX()
+    targetY = target.Position.getY()
+
+    fov.compute(observerX, observerY, sight, function (x, y) {
+      if (x === targetX && y === targetY) {
+        targetList.push(target)
+      }
+    })
+  }
+
+  return targetList.length > 0 ? targetList : null
+}
+
+Game.system.npcHere = function (x, y) {
+  let npcFound = null
+  let npcX = null
+  let npcY = null
+
+  for (const keyValue of Game.entities.get('npc')) {
+    npcX = keyValue[1].Position.getX()
+    npcY = keyValue[1].Position.getY()
+
+    if (x === npcX && y === npcY) {
+      npcFound = keyValue[1]
+      break
+    }
+  }
+  return npcFound
+}
+
+Game.system.pcHere = function (x, y) {
+  let pc = Game.entities.get('pc')
+  let pcX = pc.Position.getX()
+  let pcY = pc.Position.getY()
+
+  return x === pcX && y === pcY
+    ? pc
+    : null
 }

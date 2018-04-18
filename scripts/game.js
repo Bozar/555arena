@@ -446,7 +446,7 @@ Game.screens.drawMessage = function (newMsg) {
 Game.screens.drawDungeon = function () {
   let ePC = Game.entities.get('pc')
   let ePCpos = ePC.Position
-  // let eNPC = Game.entities.get('npc')
+  let eNPC = Game.entities.get('npc')
   let eDungeon = Game.entities.get('dungeon')
   let uiDungeon = Game.UI.dungeon
 
@@ -470,11 +470,7 @@ Game.screens.drawDungeon = function () {
     })
 
   drawActor(ePC)
-  // for (const keyValue of eNPC) {
-  //   if (Game.system.targetInSight(ePC, ePCpos.getSight(), keyValue[1])) {
-  //     drawActor(keyValue[1])
-  //   }
-  // }
+  drawNPC()
   // drawActor(Game.entities.get('marker'))
 
   function drawMemory () {
@@ -500,6 +496,14 @@ Game.screens.drawDungeon = function () {
     x !== null && y !== null && insideScreen(x, y) &&
       Game.display.draw(screenX(x), screenY(y),
         actor.Display.getCharacter(), actor.Display.getColor())
+  }
+
+  function drawNPC () {
+    for (const keyValue of eNPC) {
+      if (Game.system.targetInSight(ePC, ePCpos.getSight(), keyValue[1])) {
+        drawActor(keyValue[1])
+      }
+    }
   }
 
   function insideScreen (x, y) {
@@ -546,6 +550,14 @@ Game.screens.main.keyInput = function (e) {
     console.log(Game.entities.get('seed').Seed.getSeed())
   } else if (keyAction(e, 'move')) {
     Game.system.move(keyAction(e, 'move'), Game.entities.get('pc'))
+  } else if (e.key === '0') {   // temp command, create a dummy
+    let npc = Game.entity.npc('dmy')
+    Game.entities.get('npc').get(npc).Position.setX(
+      Game.entities.get('pc').Position.getX() + 1)
+    Game.entities.get('npc').get(npc).Position.setY(
+      Game.entities.get('pc').Position.getY())
+    Game.display.clear()
+    Game.screens.main.display()
   }
 }
 
