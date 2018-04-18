@@ -80,9 +80,10 @@ Game.input.keybind.get('maneuver').set('heal', ['r'])
 // actions that do not take in-game time
 Game.input.keybind.set('pause', new Map())
 Game.input.keybind.get('pause').set('explore', ['x'])
-Game.input.keybind.get('pause').set('develop', ['~'])
 Game.input.keybind.get('pause').set('nextTarget', ['PageDown', 'o'])
 Game.input.keybind.get('pause').set('previousTarget', ['PageUp', 'i'])
+Game.input.keybind.get('pause').set('develop', ['~'])
+Game.input.keybind.get('pause').set('printSeed', ['`'])
 
 Game.input.getAction = function (keyInput, mode) {
   if (!mode) {
@@ -173,6 +174,8 @@ Game.UI.dungeon = new Game.UI(Game.UI.modeline.getWidth(), null)
 Game.UI.dungeon._height = Game.UI.canvas.getHeight() - Game.UI.padTopBottom -
   Game.UI.modeline.getHeight() - Game.UI.padModeMessage -
   Game.UI.message.getHeight() - Game.UI.padMessageDungeon
+// the dungeon size should be an integer
+Game.UI.dungeon._height = Math.floor(Game.UI.dungeon._height)
 Game.UI.dungeon._x = Game.UI.padLeftRight
 Game.UI.dungeon._y = Game.UI.padTopBottom
 
@@ -279,7 +282,7 @@ Game.screens.drawBorder = function () {
     Game.display.draw(status.getX() - 1, i, '|')
   }
   for (let i = dungeon.getX(); i < dungeon.getWidth() + 1; i++) {
-    Game.display.draw(i, dungeon.getY() + dungeon.getHeight() - 0.3, '-')
+    Game.display.draw(i, dungeon.getY() + dungeon.getHeight(), '-')
   }
 }
 
@@ -507,19 +510,23 @@ Game.screens.main.initialize = function () {
   Game.entity.dungeon()
   Game.system.placeActor(Game.entities.get('pc'))
 
-  Game.input.listenEvent('add', 'main')
+  Game.entity.timer()
+  Game.entities.get('timer').scheduler.add(Game.entities.get('pc'), true)
+  Game.entities.get('timer').engine.start()
 }
 
 Game.screens.main.keyInput = function (e) {
-  if (Game.input.getAction(e, 'move')) {
-    Game.system.addMessage(Game.input.getAction(e, 'move'))
-    // console.log(Game.input.getAction(e, 'move'))
-  } else {
-    Game.system.addMessage(e.key)
-    // console.log(e.key)
+  let keyAction = Game.input.getAction
+
+  if (e.shiftKey) {
+    if (keyAction(e, 'pause') === 'develop') {
+      Game.setDevelop()
+    }
+  } else if (keyAction(e, 'pause') === 'printSeed') {
+    console.log(Game.entities.get('seed').Seed.getSeed())
+  } else if (keyAction(e, 'move')) {
+    Game.system.move(keyAction(e, 'move'), Game.entities.get('pc'))
   }
-  Game.display.clear()
-  Game.screens.main.display()
 }
 
 Game.screens.main.display = function () {

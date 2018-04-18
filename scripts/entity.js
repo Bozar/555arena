@@ -4,6 +4,7 @@
 Game.entities = new Map()
 Game.entities.set('message', null)
 Game.entities.set('seed', null)
+Game.entities.set('timer', null)
 
 // ----- Create a single entity +++++
 Game.entity = {}
@@ -46,6 +47,7 @@ Game.entity.pc = function () {
 
   // e.addComponent(new Game.Component.ActorName('Nameless One', null))
   e.addComponent(new Game.Component.Position(6))
+  e.addComponent(new Game.Component.Move())
   // e.addComponent(new Game.Component.FastMove())
   e.addComponent(new Game.Component.Display('@'))
   // e.addComponent(new Game.Component.HitPoint(64))
@@ -53,7 +55,7 @@ Game.entity.pc = function () {
   // e.addComponent(new Game.Component.ActorClock())
   // e.addComponent(new Game.Component.Status())
 
-  // e.act = Game.system.pcAct
+  e.act = Game.system.pcAct
 
   Game.entities.set('pc', e)
 }
@@ -63,4 +65,13 @@ Game.entity.seed = function () {
   e.addComponent(new Game.Component.Seed())
 
   Game.entities.set('seed', e)
+}
+
+Game.entity.timer = function () {
+  let e = new Game.Factory('timer')
+
+  e.scheduler = new ROT.Scheduler.Action()
+  e.engine = new ROT.Engine(e.scheduler)
+
+  Game.entities.set('timer', e)
 }

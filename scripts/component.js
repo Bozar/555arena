@@ -83,3 +83,13 @@ Game.Component.Seed = function () {
     }
   }
 }
+
+Game.Component.Move = function () {
+  this._name = 'Move'
+
+  this._moveDuration = 1
+  this._waitDuration = 1
+
+  this.getMoveDuration = function () { return this._moveDuration }
+  this.getWaitDuration = function () { return this._waitDuration }
+}
