@@ -354,8 +354,26 @@ Game.screens.drawGift = function () {
 }
 
 Game.screens.drawTurn = function () {
+  let left = Game.entities.get('pc').LastAction.getLastAction()
+  let total = Game.entities.get('timer').scheduler.getTime()
+
+  let intPart = Math.floor(total)
+  let floatPart = Number.parseFloat(total - intPart > 0
+    ? (total - intPart).toFixed(1)
+    : 0.0)
+
+  let right = intPart >= 9999
+    ? (intPart - 9999 + floatPart)
+    : (intPart + floatPart)
+
   Game.display.drawText(Game.UI.turn.getX(), Game.UI.turn.getY(),
-    Game.text.ui('turn') + '2/25')
+    'TN: ' + int2floatStr(left) + '/' + int2floatStr(right))
+
+  function int2floatStr (number) {
+    return Number.isInteger(number)
+      ? number.toString(10) + '.0'
+      : number.toString(10)
+  }
 }
 
 Game.screens.drawEffect = function () {

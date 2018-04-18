@@ -179,7 +179,7 @@ Game.system.pcAct = function () {
 }
 
 Game.system.unlockEngine = function (duration, actor) {
-  // Game.system.isPC(e) && e.ActorClock.setLastAction(duration)
+  Game.system.isPC(actor) && actor.LastAction.setLastAction(duration)
 
   Game.entities.get('timer').scheduler.setDuration(duration)
   Game.entities.get('timer').engine.unlock()

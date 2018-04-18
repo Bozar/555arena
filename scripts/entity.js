@@ -52,7 +52,7 @@ Game.entity.pc = function () {
   e.addComponent(new Game.Component.Display('@'))
   // e.addComponent(new Game.Component.HitPoint(64))
   // e.addComponent(new Game.Component.Combat(25, 70, 12))
-  // e.addComponent(new Game.Component.ActorClock())
+  e.addComponent(new Game.Component.LastAction())
   // e.addComponent(new Game.Component.Status())
 
   e.act = Game.system.pcAct

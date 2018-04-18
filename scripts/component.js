@@ -93,3 +93,13 @@ Game.Component.Move = function () {
   this.getMoveDuration = function () { return this._moveDuration }
   this.getWaitDuration = function () { return this._waitDuration }
 }
+
+Game.Component.LastAction = function () {
+  this._name = 'LastAction'
+
+  this._lastAction = 0    // how many turns dose the last action take
+
+  this.getLastAction = function () { return this._lastAction }
+
+  this.setLastAction = function (turn) { this._lastAction = turn }
+}
