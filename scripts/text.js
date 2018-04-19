@@ -5,8 +5,9 @@ Game.text = {}
 Game.text.modeLine = function (id) {
   let text = new Map()
 
-  text.set('explore', '[Exp]')
-  text.set('aim', '[Aim]')
+  text.set('main', '')
+  text.set('explore', '[Exp] ')
+  text.set('aim', '[Aim] ')
 
   text.set('space', 'Press Space to continue')
   text.set('enter', 'Press Enter to confirm')

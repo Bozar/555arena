@@ -6,6 +6,7 @@ Game.entities.set('dungeon', null)
 Game.entities.set('message', null)
 Game.entities.set('seed', null)
 Game.entities.set('timer', null)
+Game.entities.set('marker', null)
 Game.entities.set('pc', null)
 Game.entities.set('npc', new Map())
 
@@ -86,4 +87,15 @@ Game.entity.timer = function () {
   e.engine = new ROT.Engine(e.scheduler)
 
   Game.entities.set('timer', e)
+}
+
+Game.entity.marker = function () {
+  let e = new Game.Factory('marker')
+
+  e.addComponent(new Game.Component.Display('X', 'orange'))
+  e.addComponent(new Game.Component.Position())
+  e.addComponent(new Game.Component.Move())
+  e.addComponent(new Game.Component.FastMove())
+
+  Game.entities.set('marker', e)
 }

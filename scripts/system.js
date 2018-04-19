@@ -19,6 +19,10 @@ Game.system.isPC = function (actor) {
   return actor.getID() === Game.entities.get('pc').getID()
 }
 
+Game.system.isMarker = function (actor) {
+  return actor.getID() === Game.entities.get('marker').getID()
+}
+
 Game.system.placeActor = function (actor) {
   let x = 0
   let y = 0
@@ -175,22 +179,22 @@ Game.system.fastMove = function (direction, e) {
 }
 
 Game.system.isWalkable = function (x, y, e) {
-  // let pc = Game.entities.get('pc').Position
+  let position = Game.entities.get('pc').Position
   let dungeon = Game.entities.get('dungeon')
   let walkable = false
 
-  // if (e && e.getID() === Game.entities.get('marker').getID()) {
-  //   let inSight = []
+  if (e && Game.system.isMarker(e)) {
+    let inSight = []
 
-  //   dungeon.fov.compute(pc.getX(), pc.getY(), pc.getSight(),
-  //     function (x, y) { inSight.push(x + ',' + y) })
+    dungeon.fov.compute(position.getX(), position.getY(), position.getSight(),
+      function (x, y) { inSight.push(x + ',' + y) })
 
-  //   walkable = inSight.indexOf(x + ',' + y) > -1
-  // } else {
-  walkable = dungeon.Dungeon.getTerrain().get(x + ',' + y) === 0 &&
-    !Game.system.npcHere(x, y) &&
-    !Game.system.pcHere(x, y)
-  // }
+    walkable = inSight.indexOf(x + ',' + y) > -1
+  } else {
+    walkable = dungeon.Dungeon.getTerrain().get(x + ',' + y) === 0 &&
+      !Game.system.npcHere(x, y) &&
+      !Game.system.pcHere(x, y)
+  }
 
   return walkable
 }
@@ -209,7 +213,6 @@ Game.system.unlockEngine = function (duration, actor) {
 
   Game.entities.get('timer').scheduler.setDuration(duration)
   Game.entities.get('timer').engine.unlock()
-  // console.log(Game.entities.get('timer').scheduler.getTime())
 
   Game.display.clear()
   Game.screens.main.display()
@@ -270,4 +273,189 @@ Game.system.pcHere = function (x, y) {
   return x === pcX && y === pcY
     ? pc
     : null
+}
+
+Game.system.exploreMode = function (interact, range) {
+  let marker = Game.entities.get('marker')
+  let markerPos = marker.Position
+  let pc = Game.entities.get('pc')
+  let npc = Game.entities.get('npc')
+  let pcPos = pc.Position
+  let action = Game.input.getAction
+  let pcHere = Game.system.pcHere
+  let npcHere = Game.system.npcHere
+  let mainScreen = Game.screens.main
+
+  let saveSight = pcPos.getSight()
+  let spacePressed = false
+  let escPressed = false
+  let targetFound = null
+
+  markerPos.setX(pcPos.getX())
+  markerPos.setY(pcPos.getY())
+  Number.isInteger(range) && range >= 0 && pcPos.setSight(range)
+
+  let targetList = Game.system.targetInSight(pc, pcPos.getSight(), npc) || []
+  sortTarget()
+
+  // draw the marker on PC's position
+  // draw mode and range in the modeline
+  if (mainScreen.getMode() === 'main') {
+    mainScreen.setMode('explore',
+      Game.text.modeLine('range') + Game.system.getRange(markerPos, pcPos))
+  }
+  Game.display.clear()
+  Game.screens.main.display()
+
+  Game.input.listenEvent('remove', 'main')
+  Game.input.listenEvent('add', moveMarker)
+
+  // helper functions
+  function moveMarker (e) {
+    if (e.shiftKey) {
+      if (action(e, 'fastMove')) {
+        for (let i = 0; i < pcPos.getSight(); i++) {
+          if (!Game.system.move(action(e, 'fastMove'), marker, true)) { break }
+        }
+      }
+    } else if (action(e, 'move')) {
+      Game.system.move(action(e, 'move'), marker, true)
+    } else if (action(e, 'pause') === 'nextTarget') {
+      lockTarget(action(e, 'pause'))
+    } else if (action(e, 'pause') === 'previousTarget') {
+      lockTarget(action(e, 'pause'))
+    } else if (action(e, 'fixed') === 'space') {
+      switch (mainScreen.getMode()) {
+        case 'explore':
+          if (Game.getDevelop()) {
+            targetFound = pcHere(markerPos.getX(), markerPos.getY()) ||
+              npcHere(markerPos.getX(), markerPos.getY())
+            targetFound && targetFound.print()
+          }
+          break
+        case 'aim':
+          targetFound = npcHere(markerPos.getX(), markerPos.getY())
+          spacePressed = targetFound !== null
+          break
+      }
+    } else if (action(e, 'fixed') === 'esc') {
+      escPressed = true
+      // testing
+    } else if (Game.getDevelop()) {
+      if (e.key === '0') {
+        Game.system.createDummy()
+      }
+    }
+
+    if (spacePressed || escPressed) {
+      markerPos.setX(null)
+      markerPos.setY(null)
+      pcPos.setSight(saveSight)
+      mainScreen.setMode('main')
+    }
+
+    // update range
+    if (mainScreen.getMode() === 'explore') {
+      mainScreen.setMode('explore',
+        Game.text.modeLine('range') + Game.system.getRange(markerPos, pcPos))
+    }
+    Game.screens.drawDescription(markerPos.getX(), markerPos.getY())
+    Game.display.clear()
+    mainScreen.display()
+
+    if (spacePressed) {
+      Game.keyboard.listenEvent('remove', moveMarker)
+      // interact with the target under marker
+      interact.call(interact, targetFound)
+    } else if (escPressed) {
+      Game.input.listenEvent('remove', moveMarker)
+      Game.input.listenEvent('add', 'main')
+    }
+  }
+
+  function sortTarget () {
+    if (!targetList.length) {
+      return false
+    }
+
+    targetList.sort((left, right) => {
+      let pcX = pcPos.getX()
+      let leftX = left.Position.getX()
+      let leftY = left.Position.getY()
+      let rightX = right.Position.getX()
+      let rightY = right.Position.getY()
+
+      if (leftX > pcX && rightX > pcX) {
+        if (leftX > rightX) {
+          return true
+        } else if (leftX === rightX) {
+          return leftY > rightY
+        } else {
+          return false
+        }
+      } else if (leftX <= pcX && rightX <= pcX) {
+        if (leftX > rightX) {
+          return false
+        } else if (leftX === rightX) {
+          return leftY < rightY
+        } else {
+          return true
+        }
+      } else {
+        return leftX < rightX
+      }
+    })
+
+    return true
+  }
+
+  function lockTarget (order) {
+    let nextIndex = 0
+    let previousIndex = targetList.length - 1
+
+    if (previousIndex < 0) {
+      return false
+    }
+
+    for (let i = 0; i < targetList.length; i++) {
+      if (targetList[i].Position.getX() === markerPos.getX() &&
+        targetList[i].Position.getY() === markerPos.getY()) {
+        nextIndex = i + 1 < targetList.length
+          ? i + 1
+          : 0
+        previousIndex = i - 1 > -1
+          ? i - 1
+          : targetList.length - 1
+      }
+    }
+
+    switch (order) {
+      case 'nextTarget':
+        markerPos.setX(targetList[nextIndex].Position.getX())
+        markerPos.setY(targetList[nextIndex].Position.getY())
+        return true
+      case 'previousTarget':
+        markerPos.setX(targetList[previousIndex].Position.getX())
+        markerPos.setY(targetList[previousIndex].Position.getY())
+        return true
+    }
+  }
+}
+
+Game.system.createDummy = function () {
+  let x = Game.entities.get('marker').Position.getX()
+  let y = Game.entities.get('marker').Position.getY()
+
+  let id = Game.entity.npc('dmy')
+  let actor = Game.entities.get('npc').get(id)
+
+  actor.Position.setX(x)
+  actor.Position.setY(y)
+}
+
+Game.system.getRange = function (source, target) {
+  let x = Math.abs(source.getX() - target.getX())
+  let y = Math.abs(source.getY() - target.getY())
+
+  return Math.max(x, y)
 }

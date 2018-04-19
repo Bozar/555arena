@@ -217,9 +217,7 @@ Game.Screen.prototype.getText = function () { return this._modeLineText }
 
 Game.Screen.prototype.setMode = function (mode, text) {
   this._mode = mode || 'main'
-  this._modeLineText = Game.text.modeLine(this._mode) + ' ' + (text || '')
-
-  return true
+  this._modeLineText = Game.text.modeLine(this._mode) + (text || '')
 }
 
 Game.Screen.prototype.enter = function () {
@@ -443,6 +441,21 @@ Game.screens.drawMessage = function (newMsg) {
   }
 }
 
+Game.screens.drawModeLine = function (text) {
+  Game.display.drawText(Game.UI.modeline.getX(), Game.UI.modeline.getY(), text)
+}
+
+Game.screens.drawDescription = function (x, y) {
+  if (!Game.system.npcHere(x, y)) {
+    return false
+  }
+
+  let npc = Game.system.npcHere(x, y)
+  console.log(npc.getEntityName())
+
+  return true
+}
+
 Game.screens.drawDungeon = function () {
   let ePC = Game.entities.get('pc')
   let ePCpos = ePC.Position
@@ -471,7 +484,7 @@ Game.screens.drawDungeon = function () {
 
   drawActor(ePC)
   drawNPC()
-  // drawActor(Game.entities.get('marker'))
+  drawActor(Game.entities.get('marker'))
 
   function drawMemory () {
     for (let i = 0; i < memory.length; i++) {
@@ -528,6 +541,7 @@ Game.screens.main.initialize = function () {
   ROT.RNG.setSeed(Game.entities.get('seed').Seed.getSeed())
 
   Game.entity.message()
+  Game.entity.marker()
   Game.entity.pc()
   Game.entity.dungeon()
   Game.system.placeActor(Game.entities.get('pc'))
@@ -550,14 +564,8 @@ Game.screens.main.keyInput = function (e) {
     console.log(Game.entities.get('seed').Seed.getSeed())
   } else if (keyAction(e, 'move')) {
     Game.system.move(keyAction(e, 'move'), Game.entities.get('pc'))
-  } else if (e.key === '0') {   // temp command, create a dummy
-    let npc = Game.entity.npc('dmy')
-    Game.entities.get('npc').get(npc).Position.setX(
-      Game.entities.get('pc').Position.getX() + 1)
-    Game.entities.get('npc').get(npc).Position.setY(
-      Game.entities.get('pc').Position.getY())
-    Game.display.clear()
-    Game.screens.main.display()
+  } else if (keyAction(e, 'pause') === 'explore') {
+    Game.system.exploreMode()
   }
 }
 
@@ -575,6 +583,7 @@ Game.screens.main.display = function () {
   // dungeon, message & modeline
   Game.screens.drawMessage()
   Game.screens.drawDungeon()
+  Game.screens.drawModeLine(this.getText())
 }
 
 // ----- Initialization +++++

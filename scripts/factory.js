@@ -3,7 +3,10 @@
 // Entity factory
 // http://vasir.net/blog/game-development/how-to-build-entity-component-system-in-javascript
 Game.Factory = function (name) {
-  this.id = (function () {
+  this._entityName = name
+  this._id = createID()
+
+  function createID () {
     // 12345678-{repeat}-{repeat}-{repeat}
     let randomNumber = ''
 
@@ -11,17 +14,15 @@ Game.Factory = function (name) {
       randomNumber += (Math.random() * Math.pow(10, 8) | 0).toString(16)
     }
     return randomNumber.replace(/.{8}/g, '$&' + '-').slice(0, 35)
-  }())
-
-  this.entityName = name
+  }
 }
 
-Game.Factory.prototype.getID = function () { return this.id }
+Game.Factory.prototype.getID = function () { return this._id }
+Game.Factory.prototype.getEntityName = function () { return this._entityName }
 
 Game.Factory.prototype.addComponent = function (component) {
   this[component._name] = component
 }
-
 Game.Factory.prototype.removeComponent = function (name) {
   delete this[name]
 }
