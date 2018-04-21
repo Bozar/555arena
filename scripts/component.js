@@ -118,6 +118,68 @@ Game.Component.LastAction = function () {
   this._lastAction = 0    // how many turns dose the last action take
 
   this.getLastAction = function () { return this._lastAction }
-
   this.setLastAction = function (turn) { this._lastAction = turn }
+}
+
+Game.Component.ItemTemplate = function (mainType, subType, prefix, level) {
+  this._name = subType || mainType + prefix + level
+
+  this._mainType = mainType
+  this._subType = subType || mainType
+  this._prefix = prefix
+  this._level = level
+  this._stageName =
+    Game.text.itemLevel(this._level) + ' ' + this._prefix + ' ' + this._subType
+
+  // recharge & counter
+  // potion: recharge 1 every _maxCounter turns
+  // weapon: recharge 1 every _maxCounter kills
+  // ring: cannot recharge, destroy when _currentCharge === 0
+  switch (this._mainType) {
+    case 'Potion':
+      this._maxCharge = this._level * 2 + 1     // 1, 3, 5
+      this._maxCounter = 6
+      break
+    case 'Weapon':
+      this._maxCharge = 1
+      this._maxCounter = 8
+      break
+    case 'Ring':
+      switch (this._level) {
+        case 0:
+          this._maxCharge = 3
+          this._maxCounter = null
+          break
+        case 1:
+          this._maxCharge = 7
+          this._maxCounter = null
+          break
+        case 2:   // master ring provides constant buffs
+          this._maxCharge = null
+          this._maxCounter = null
+          break
+      }
+      break
+  }
+
+  this._currentCharge = this._maxCharge
+  this._currentCounter = this._maxCounter > 0 ? 0 : null
+
+  this.getStageName = function () { return this._stageName }
+  this.getMaxCharge = function () { return this._maxCharge }
+  this.getCurrentCharge = function () { return this._currentCharge }
+  this.getMaxCounter = function () { return this._maxCounter }
+  this.getCurrentCounter = function () { return this._currentCounter }
+
+  this.setMaxCharge = function (number) { this._maxCharge = number }
+  this.setCurrentCharge = function (number) { this._currentCharge = number }
+  this.setMaxCounter = function (number) { this._maxCounter = number }
+  this.setCurrentCounter = function (number) { this._currentCounter = number }
+
+  this.hasMaxCharge = function () {
+    return this._currentCharge === this._maxCharge
+  }
+  this.isUsable = function () {
+    return this._currentCharge > 0
+  }
 }

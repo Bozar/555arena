@@ -38,3 +38,8 @@ Game.text.error = function (id) {
 
   return text.get(id)
 }
+
+Game.text.itemLevel = function (level) {
+  let text = ['Crude', 'Fine', 'Master']
+  return text[level]
+}

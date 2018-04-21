@@ -20,8 +20,12 @@ Game.Factory = function (name) {
 Game.Factory.prototype.getID = function () { return this._id }
 Game.Factory.prototype.getEntityName = function () { return this._entityName }
 
-Game.Factory.prototype.addComponent = function (component) {
-  this[component._name] = component
+Game.Factory.prototype.addComponent = function (component, newName) {
+  if (newName) {
+    this[newName] = component
+  } else {
+    this[component._name] = component
+  }
 }
 Game.Factory.prototype.removeComponent = function (name) {
   delete this[name]

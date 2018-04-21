@@ -6,10 +6,7 @@ Game._version = '0.0.1-dev'
 Game._develop = true
 Game.getVersion = function () { return this._version }
 Game.getDevelop = function () { return this._develop }
-Game.setDevelop = function () {
-  this._develop = !this._develop
-  return true
-}
+Game.setDevelop = function () { this._develop = !this._develop }
 
 // set seed manually for testing, '#' can be omitted
 // there are no hyphens ('-') inside numbered seed
@@ -567,6 +564,9 @@ Game.screens.main.keyInput = function (e) {
   } else if (keyAction(e, 'pause') === 'explore') {
     Game.system.exploreMode()
   }
+
+  Game.display.clear()
+  Game.screens.main.display()
 }
 
 Game.screens.main.display = function () {
