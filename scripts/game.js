@@ -293,8 +293,8 @@ Game.screens.drawHPenergy = function () {
   let pc = Game.entities.get('pc')
   let hp = pc.HitPoint.getCurrentHP()
   let maxHP = pc.HitPoint.getMaxHP()
-  let energy = 1
-  let maxEnergy = 5
+  let energy = pc.Energy.getCurrentCharge()
+  let maxEnergy = pc.Energy.getMaxCharge()
   let color = hp / maxHP > 0.7
     ? 'white'
     : hp / maxHP > 0.4
@@ -547,6 +547,8 @@ Game.screens.main.initialize = function () {
   Game.entities.get('timer').engine.start()
 
   // TEST: will be deleted later
+  Game.entities.get('pc').Energy.setCurrentCharge(1)
+  Game.entities.get('pc').Energy.setStartTurn(1)
   Game.entities.get('pc').HitPoint.damage(6)
   Game.entities.get('pc').HealPotion.setCurrentCharge(1)
   Game.entities.get('pc').HealPotion.setStartTurn(1)

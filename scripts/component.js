@@ -89,9 +89,13 @@ Game.Component.Move = function () {
 
   this._moveDuration = 1
   this._waitDuration = 1
+  this._moveEnergy = 1
+  this._waitEnergy = -1
 
   this.getMoveDuration = function () { return this._moveDuration }
   this.getWaitDuration = function () { return this._waitDuration }
+  this.getMoveEnergy = function () { return this._moveEnergy }
+  this.getWaitEnergy = function () { return this._waitEnergy }
 }
 
 Game.Component.FastMove = function () {
@@ -126,19 +130,29 @@ Game.Component.ItemTemplate = function (mainType, subType, prefix, level) {
 
   this._mainType = mainType
   this._subType = subType || mainType
-  this._prefix = prefix
+  this._prefix = prefix || ''
   this._level = level
   this._stageName =
     Game.text.itemLevel(this._level) + ' ' + this._prefix + ' ' + this._subType
 
   // recharge & counter
-  // potion: recharge 1 every _maxCounter turns
-  // weapon: recharge 1 every _maxCounter kills
+  // potion: restore 1 charge every _maxCounter turns
+  // energy: restore 2 charges every _maxCounter turns
+  // weapon: restore 1 charge every _maxCounter kills
   // ring: cannot recharge, destroy when _currentCharge === 0
+  this._maxCharge = null
+  this._maxCounter = null
+  this._restore = 1
+
   switch (this._mainType) {
     case 'Potion':
       this._maxCharge = this._level * 2 + 1     // 1, 3, 5
       this._maxCounter = 6
+      break
+    case 'Energy':
+      this._maxCharge = this._level * 2 + 5
+      this._maxCounter = 1
+      this._restore = 2
       break
     case 'Weapon':
       this._maxCharge = 1
@@ -148,15 +162,9 @@ Game.Component.ItemTemplate = function (mainType, subType, prefix, level) {
       switch (this._level) {
         case 0:
           this._maxCharge = 3
-          this._maxCounter = null
           break
         case 1:
           this._maxCharge = 7
-          this._maxCounter = null
-          break
-        case 2:   // master ring provides constant buffs
-          this._maxCharge = null
-          this._maxCounter = null
           break
       }
       break
@@ -168,33 +176,36 @@ Game.Component.ItemTemplate = function (mainType, subType, prefix, level) {
 
   this.getStageName = function () { return this._stageName }
   this.getMaxCharge = function () { return this._maxCharge }
+  this.getRestore = function () { return this._restore }
   this.getCurrentCharge = function () { return this._currentCharge }
   this.getMaxCounter = function () { return this._maxCounter }
   this.getCurrentCounter = function () { return this._currentCounter }
   this.getPrefix = function () { return this._prefix }
   this.getStartTurn = function () { return this._startTurn }
 
-  this.setMaxCharge = function (number) { this._maxCharge = number }
+  this.setLevel = function (number) {
+    this._level = number
+    switch (this._mainType) {
+      case 'Potion':
+        this._maxCharge = this._level * 2 + 1
+        break
+      case 'Energy':
+        this._maxCharge = this._level * 2 + 5
+        break
+    }
+  }
   this.setCurrentCharge = function (number) { this._currentCharge = number }
-  this.setMaxCounter = function (number) { this._maxCounter = number }
   this.setCurrentCounter = function (number) { this._currentCounter = number }
   this.setStartTurn = function (number) { this._startTurn = number }
 
   this.hasMaxCharge = function () {
-    return this._currentCharge === this._maxCharge
+    return this._currentCharge >= this._maxCharge
   }
-  this.isUsable = function () {
-    return this._currentCharge > 0
-  }
-  this.isPotion = function () {
-    return this._mainType === 'Potion'
-  }
-  this.isRing = function () {
-    return this._mainType === 'Ring'
-  }
-  this.isWeapon = function () {
-    return this._mainType === 'Weapon'
-  }
+  this.isUsable = function () { return this._currentCharge > 0 }
+  this.isPotion = function () { return this._mainType === 'Potion' }
+  this.isEnergy = function () { return this._mainType === 'Energy' }
+  this.isRing = function () { return this._mainType === 'Ring' }
+  this.isWeapon = function () { return this._mainType === 'Weapon' }
 }
 
 Game.Component.HitPoint = function (hp) {

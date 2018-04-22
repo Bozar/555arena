@@ -76,6 +76,7 @@ Game.system.move = function (direction, actor, lockEngine) {
 
   // let duration = Game.system.updateAttribute('moveSpeed', e, null)
   let duration = actor.Move.getMoveDuration()
+  let energyCost = actor.Move.getMoveEnergy()
   let hasMoved = false
 
   let where = new Map()
@@ -98,11 +99,13 @@ Game.system.move = function (direction, actor, lockEngine) {
   // helper functions
   function wait1Turn () {
     duration = actor.Move.getWaitDuration()
+    Game.system.loseEnergy(actor, actor.Move.getWaitEnergy())
     hasMoved = true
   }
 
   function moveLeft () {
-    if (Game.system.isWalkable(position.getX() - 1, position.getY(), actor)) {
+    if (Game.system.isWalkable(position.getX() - 1, position.getY(), actor) &&
+      Game.system.loseEnergy(actor, energyCost)) {
       position.setX(position.getX() - 1)
 
       if (Game.system.isPC(actor) &&
@@ -117,7 +120,8 @@ Game.system.move = function (direction, actor, lockEngine) {
   }
 
   function moveRight () {
-    if (Game.system.isWalkable(position.getX() + 1, position.getY(), actor)) {
+    if (Game.system.isWalkable(position.getX() + 1, position.getY(), actor) &&
+      Game.system.loseEnergy(actor, energyCost)) {
       position.setX(position.getX() + 1)
 
       if (Game.system.isPC(actor) &&
@@ -132,7 +136,8 @@ Game.system.move = function (direction, actor, lockEngine) {
   }
 
   function moveUp () {
-    if (Game.system.isWalkable(position.getX(), position.getY() - 1, actor)) {
+    if (Game.system.isWalkable(position.getX(), position.getY() - 1, actor) &&
+      Game.system.loseEnergy(actor, energyCost)) {
       position.setY(position.getY() - 1)
 
       if (Game.system.isPC(actor) &&
@@ -146,7 +151,8 @@ Game.system.move = function (direction, actor, lockEngine) {
   }
 
   function moveDown () {
-    if (Game.system.isWalkable(position.getX(), position.getY() + 1, actor)) {
+    if (Game.system.isWalkable(position.getX(), position.getY() + 1, actor) &&
+      Game.system.loseEnergy(actor, energyCost)) {
       position.setY(position.getY() + 1)
 
       if (Game.system.isPC(actor) &&
@@ -212,7 +218,7 @@ Game.system.isWalkable = function (x, y, e) {
 Game.system.pcAct = function () {
   Game.entities.get('timer').engine.lock()
 
-  Game.system.restorePotion(Game.entities.get('pc'))
+  Game.system.restoreByTurn(Game.entities.get('pc'))
   // Game.system.updateStatus(pc)
   Game.entities.get('pc').FastMove.getFastMove() && Game.system.fastMove()
 
@@ -479,15 +485,16 @@ Game.system.getCurrentTurn = function () {
 Game.system.counter2Charge = function (item) {
   if (Game.system.isItem(item) && (item.getCurrentCounter() <= 0)) {
     item.setCurrentCharge(
-      Math.min(item.getCurrentCharge() + 1, item.getMaxCharge()))
+      Math.min(item.getCurrentCharge() + item.getRestore(),
+        item.getMaxCharge()))
     if (item.hasMaxCharge()) {
       item.setCurrentCounter(0)
-      if (item.isPotion()) {
+      if (item.isPotion() || item.isEnergy()) {
         item.setStartTurn(null)
       }
     } else {
       item.setCurrentCounter(item.getMaxCounter())
-      if (item.isPotion()) {
+      if (item.isPotion() || item.isEnergy()) {
         item.setStartTurn(Game.system.getCurrentTurn())
       }
     }
@@ -496,26 +503,36 @@ Game.system.counter2Charge = function (item) {
   return false
 }
 
-Game.system.restorePotion = function (actor) {
-  if (!(actor.HealPotion && actor.FirePotion && actor.IcePotion)) {
+Game.system.restoreByTurn = function (actor) {
+  if (!(actor.HealPotion && actor.FirePotion && actor.IcePotion &&
+    actor.Energy)) {
     if (Game.getDevelop()) {
-      console.log(actor + 'does not have enough potions.')
+      console.log(actor + ' does not have potion or energy component.')
     }
     return false
   }
 
-  let potionList = [actor.HealPotion, actor.FirePotion, actor.IcePotion]
+  let restoreList =
+    [actor.HealPotion, actor.FirePotion, actor.IcePotion, actor.Energy]
   let turnPast = 0
 
-  for (let i = 0; i < potionList.length; i++) {
+  for (let i = 0; i < restoreList.length; i++) {
     turnPast = Math.floor(
-      Game.system.getCurrentTurn() - potionList[i].getStartTurn())
+      Game.system.getCurrentTurn() - restoreList[i].getStartTurn())
 
-    if (!potionList[i].hasMaxCharge() && (turnPast > 0)) {
-      potionList[i].setCurrentCounter(
-        potionList[i].getMaxCounter() - turnPast)
-      Game.system.counter2Charge(potionList[i])
+    if (!restoreList[i].hasMaxCharge() && (turnPast > 0)) {
+      restoreList[i].setCurrentCounter(
+        restoreList[i].getMaxCounter() - turnPast)
+      Game.system.counter2Charge(restoreList[i])
     }
   }
   return true
+}
+
+Game.system.loseEnergy = function (actor, energyCost) {
+  if (actor.Energy.getCurrentCharge() >= energyCost) {
+    actor.Energy.setCurrentCharge(actor.Energy.getCurrentCharge() - energyCost)
+    return true
+  }
+  return false
 }

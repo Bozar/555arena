@@ -58,6 +58,8 @@ Game.entity.pc = function () {
   e.addComponent(new Game.Component.LastAction())
   // e.addComponent(new Game.Component.Status())
 
+  e.addComponent(new Game.Component.ItemTemplate('Energy', null, 'Action', 0),
+    'Energy')
   e.addComponent(new Game.Component.ItemTemplate('Potion', null, 'Heal', 1),
     'HealPotion')
   e.addComponent(new Game.Component.ItemTemplate('Potion', null, 'Fire', 0),
