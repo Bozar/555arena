@@ -53,7 +53,7 @@ Game.entity.pc = function () {
   e.addComponent(new Game.Component.Move())
   e.addComponent(new Game.Component.FastMove())
   e.addComponent(new Game.Component.Display('@'))
-  // e.addComponent(new Game.Component.HitPoint(64))
+  e.addComponent(new Game.Component.HitPoint(20))
   // e.addComponent(new Game.Component.Combat(25, 70, 12))
   e.addComponent(new Game.Component.LastAction())
   // e.addComponent(new Game.Component.Status())

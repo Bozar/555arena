@@ -68,11 +68,11 @@ Game.input.keybind.get('gift').set('weapon', ['d'])
 Game.input.keybind.get('gift').set('ring', ['s'])
 
 // maneuver actions
-Game.input.keybind.set('maneuver', new Map())
-Game.input.keybind.get('maneuver').set('drink', ['q'])
-Game.input.keybind.get('maneuver').set('fire', ['w'])
-Game.input.keybind.get('maneuver').set('ice', ['e'])
-Game.input.keybind.get('maneuver').set('heal', ['r'])
+Game.input.keybind.set('potion', new Map())
+Game.input.keybind.get('potion').set('drink', ['q'])
+Game.input.keybind.get('potion').set('fire', ['w'])
+Game.input.keybind.get('potion').set('ice', ['e'])
+Game.input.keybind.get('potion').set('heal', ['r'])
 
 // actions that do not take in-game time
 Game.input.keybind.set('pause', new Map())
@@ -290,13 +290,14 @@ Game.screens.drawVersion = function () {
 }
 
 Game.screens.drawHPenergy = function () {
-  let hp = 14
-  let maxHP = 20
+  let pc = Game.entities.get('pc')
+  let hp = pc.HitPoint.getCurrentHP()
+  let maxHP = pc.HitPoint.getMaxHP()
   let energy = 1
   let maxEnergy = 5
   let color = hp / maxHP > 0.7
     ? 'white'
-    : hp / maxHP > 0.3
+    : hp / maxHP > 0.4
       ? 'orange'
       : 'red'
   let x = Game.UI.hpEnergy.getX()
@@ -546,12 +547,13 @@ Game.screens.main.initialize = function () {
   Game.entities.get('timer').engine.start()
 
   // TEST: will be deleted later
+  Game.entities.get('pc').HitPoint.damage(6)
   Game.entities.get('pc').HealPotion.setCurrentCharge(1)
   Game.entities.get('pc').HealPotion.setStartTurn(1)
   Game.entities.get('pc').FirePotion.setCurrentCharge(0)
   Game.entities.get('pc').FirePotion.setStartTurn(1)
   Game.entities.get('pc').FirePotion.setCurrentCounter(3)
-  Game.entities.get('pc').FirePotion.setStartTurn(1)
+  Game.entities.get('pc').IcePotion.setStartTurn(1)
 }
 
 Game.screens.main.keyInput = function (e) {

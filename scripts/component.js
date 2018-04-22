@@ -196,3 +196,25 @@ Game.Component.ItemTemplate = function (mainType, subType, prefix, level) {
     return this._mainType === 'Weapon'
   }
 }
+
+Game.Component.HitPoint = function (hp) {
+  this._name = 'HitPoint'
+
+  this._maxHP = hp
+  this._currentHP = this._maxHP
+  this._heal = Math.floor(this._maxHP * 0.4)
+  this._regen = Math.floor(this._maxHP * 0.2)
+
+  this.getMaxHP = function () { return this._maxHP }
+  this.getCurrentHP = function () { return this._currentHP }
+
+  this.heal = function () {
+    this._currentHP = Math.min(this._currentHP + this._heal, this._maxHP)
+  }
+  this.regen = function () {
+    this._currentHP = Math.min(this._currentHP + this._regen, this._maxHP)
+  }
+  this.damage = function (dmg) {
+    this._currentHP = Math.max(this._currentHP - dmg, 0)
+  }
+}
