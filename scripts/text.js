@@ -23,9 +23,9 @@ Game.text.ui = function (id) {
   text.set('hp', 'HP: ')
   text.set('energy', 'EN: ')
   text.set('turn', 'TN: ')
-  text.set('heal', 'Heal')
-  text.set('fire', 'Fire')
-  text.set('ice', 'Ice')
+  text.set('Heal', 'Heal')
+  text.set('Fire', 'Fire')
+  text.set('Ice', 'Ice')
   text.set('gift', 'Gift')
 
   return text.get(id)

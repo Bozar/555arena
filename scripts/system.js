@@ -23,6 +23,16 @@ Game.system.isMarker = function (actor) {
   return actor.getID() === Game.entities.get('marker').getID()
 }
 
+Game.system.isItem = function (item) {
+  if (!item.getMaxCharge) {
+    if (Game.getDevelop()) {
+      console.log(item + 'is not an item.')
+    }
+    return false
+  }
+  return true
+}
+
 Game.system.placeActor = function (actor) {
   let x = 0
   let y = 0
@@ -202,6 +212,7 @@ Game.system.isWalkable = function (x, y, e) {
 Game.system.pcAct = function () {
   Game.entities.get('timer').engine.lock()
 
+  Game.system.restorePotion(Game.entities.get('pc'))
   // Game.system.updateStatus(pc)
   Game.entities.get('pc').FastMove.getFastMove() && Game.system.fastMove()
 
@@ -458,4 +469,53 @@ Game.system.getRange = function (source, target) {
   let y = Math.abs(source.getY() - target.getY())
 
   return Math.max(x, y)
+}
+
+Game.system.getCurrentTurn = function () {
+  return Number.parseFloat(
+    Game.entities.get('timer').scheduler.getTime().toFixed(1))
+}
+
+Game.system.counter2Charge = function (item) {
+  if (Game.system.isItem(item) && (item.getCurrentCounter() <= 0)) {
+    item.setCurrentCharge(
+      Math.min(item.getCurrentCharge() + 1, item.getMaxCharge()))
+    if (item.hasMaxCharge()) {
+      item.setCurrentCounter(0)
+      if (item.isPotion()) {
+        item.setStartTurn(null)
+      }
+    } else {
+      item.setCurrentCounter(item.getMaxCounter())
+      if (item.isPotion()) {
+        item.setStartTurn(Game.system.getCurrentTurn())
+      }
+    }
+    return true
+  }
+  return false
+}
+
+Game.system.restorePotion = function (actor) {
+  if (!(actor.HealPotion && actor.FirePotion && actor.IcePotion)) {
+    if (Game.getDevelop()) {
+      console.log(actor + 'does not have enough potions.')
+    }
+    return false
+  }
+
+  let potionList = [actor.HealPotion, actor.FirePotion, actor.IcePotion]
+  let turnPast = 0
+
+  for (let i = 0; i < potionList.length; i++) {
+    turnPast = Math.floor(
+      Game.system.getCurrentTurn() - potionList[i].getStartTurn())
+
+    if (!potionList[i].hasMaxCharge() && (turnPast > 0)) {
+      potionList[i].setCurrentCounter(
+        potionList[i].getMaxCounter() - turnPast)
+      Game.system.counter2Charge(potionList[i])
+    }
+  }
+  return true
 }

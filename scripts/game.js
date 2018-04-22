@@ -309,34 +309,32 @@ Game.screens.drawHPenergy = function () {
 }
 
 Game.screens.drawPotion = function () {
-  let healCD = 0
-  let fireCD = 3
-  let iceCD = 0
-
-  let healColor = potionColor(healCD)
-  let fireColor = potionColor(fireCD)
-  let iceColor = potionColor(iceCD)
+  let healPotion = Game.entities.get('pc').HealPotion
+  let firePotion = Game.entities.get('pc').FirePotion
+  let icePotion = Game.entities.get('pc').IcePotion
+  let potionList = [healPotion, firePotion, icePotion]
 
   let x = Game.UI.potion.getX()
   let y = Game.UI.potion.getY()
   let width = Game.UI.potion.getWidth()
 
-  Game.display.drawText(x, y,
-    Game.screens.colorfulText(Game.text.ui('heal'), healColor))
-  Game.display.drawText(x, y + 1,
-    Game.screens.colorfulText(Game.text.ui('fire'), fireColor))
-  Game.display.drawText(x, y + 2,
-    Game.screens.colorfulText(Game.text.ui('ice'), iceColor))
+  for (let i = 0; i < potionList.length; i++) {
+    Game.display.drawText(x, y + i,
+      Game.screens.colorfulText(Game.text.ui(potionList[i].getPrefix()),
+        potionColor(potionList[i])))
 
-  healCD > 0 &&
-    Game.screens.drawAlignRight(x, y, width, healCD.toString(10))
-  fireCD > 0 &&
-    Game.screens.drawAlignRight(x, y + 1, width, fireCD.toString(10))
-  iceCD > 0 &&
-    Game.screens.drawAlignRight(x, y + 2, width, iceCD.toString(10))
+    Game.screens.drawAlignRight(x, y + i, width,
+      potionList[i].getCurrentCharge().toString(10) + '/' +
+      potionList[i].getCurrentCounter().toString(10)
+    )
+  }
 
-  function potionColor (cd) {
-    return cd > 0 ? 'grey' : 'white'
+  function potionColor (potion) {
+    return potion.hasMaxCharge()
+      ? 'green'
+      : potion.isUsable()
+        ? 'white'
+        : 'grey'
   }
 }
 
@@ -546,6 +544,14 @@ Game.screens.main.initialize = function () {
   Game.entity.timer()
   Game.entities.get('timer').scheduler.add(Game.entities.get('pc'), true)
   Game.entities.get('timer').engine.start()
+
+  // TEST: will be deleted later
+  Game.entities.get('pc').HealPotion.setCurrentCharge(1)
+  Game.entities.get('pc').HealPotion.setStartTurn(1)
+  Game.entities.get('pc').FirePotion.setCurrentCharge(0)
+  Game.entities.get('pc').FirePotion.setStartTurn(1)
+  Game.entities.get('pc').FirePotion.setCurrentCounter(3)
+  Game.entities.get('pc').FirePotion.setStartTurn(1)
 }
 
 Game.screens.main.keyInput = function (e) {

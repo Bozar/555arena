@@ -122,7 +122,7 @@ Game.Component.LastAction = function () {
 }
 
 Game.Component.ItemTemplate = function (mainType, subType, prefix, level) {
-  this._name = subType || mainType + prefix + level
+  this._name = prefix + (subType || mainType) + level
 
   this._mainType = mainType
   this._subType = subType || mainType
@@ -164,22 +164,35 @@ Game.Component.ItemTemplate = function (mainType, subType, prefix, level) {
 
   this._currentCharge = this._maxCharge
   this._currentCounter = this._maxCounter > 0 ? 0 : null
+  this._startTurn = null
 
   this.getStageName = function () { return this._stageName }
   this.getMaxCharge = function () { return this._maxCharge }
   this.getCurrentCharge = function () { return this._currentCharge }
   this.getMaxCounter = function () { return this._maxCounter }
   this.getCurrentCounter = function () { return this._currentCounter }
+  this.getPrefix = function () { return this._prefix }
+  this.getStartTurn = function () { return this._startTurn }
 
   this.setMaxCharge = function (number) { this._maxCharge = number }
   this.setCurrentCharge = function (number) { this._currentCharge = number }
   this.setMaxCounter = function (number) { this._maxCounter = number }
   this.setCurrentCounter = function (number) { this._currentCounter = number }
+  this.setStartTurn = function (number) { this._startTurn = number }
 
   this.hasMaxCharge = function () {
     return this._currentCharge === this._maxCharge
   }
   this.isUsable = function () {
     return this._currentCharge > 0
+  }
+  this.isPotion = function () {
+    return this._mainType === 'Potion'
+  }
+  this.isRing = function () {
+    return this._mainType === 'Ring'
+  }
+  this.isWeapon = function () {
+    return this._mainType === 'Weapon'
   }
 }
